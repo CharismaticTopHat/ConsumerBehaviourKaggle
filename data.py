@@ -2,64 +2,52 @@ from pyspark.sql import SparkSession
 import json
 
 if __name__ == "__main__":
-    spark = SparkSession.builder.appName("customer_analysis").getOrCreate()
+    spark = SparkSession.builder.appName("videogame_analysis").getOrCreate()
 
-    print("Reading dataset.csv ... ")
-    path_customers = "dataset.csv"
-    df_customers = spark.read.csv(path_customers, header=True, inferSchema=True)
+    path_videogames = "dataset.csv"
+    df_videogames = spark.read.csv(path_videogames, header=True, inferSchema=True)
 
-    df_customers.createOrReplaceTempView("customers")
+    df_videogames.createOrReplaceTempView("videogames")
 
-    # Mostrar estructura de los datos
-    query = "DESCRIBE customers"
-    df_describe = spark.sql(query)
-    df_describe.show()
-    # Geberación de JSON
-    results = df_describe.toJSON().collect()
-    with open("results/describe_customers.json", "w") as file:
-        json.dump(results, file)
-
-    # Top 10 clientes que más gastaron
+    # Top 10 juegos más caros
     query = """
-        SELECT Customer_ID, SUM(Purchase_Amount) AS Total_Spending
-        FROM customers
-        GROUP BY Customer_ID
-        ORDER BY Total_Spending DESC
+        SELECT name, price
+        FROM videogames
+        ORDER BY price DESC
         LIMIT 10
     """
-    df_top_customers = spark.sql(query)
-    df_top_customers.show()
-    # Geberación de JSON
-    results = df_top_customers.toJSON().collect()
-    with open("results/top_customers.json", "w") as file:
+    df_top_expensive = spark.sql(query)
+    df_top_expensive.show()
+    results = df_top_expensive.toJSON().collect()
+    with open("results/top_expensive_games.json", "w") as file:
         json.dump(results, file)
 
-    # Cantidad promedio de compras en base a edad
+    # Tiempo de juego promedio
     query = """
-        SELECT Age, AVG(Purchase_Amount) AS Avg_Spending
-        FROM customers
-        GROUP BY Age
-        ORDER BY Age
+        SELECT AVG(hltb_single) AS avg_playtime
+        FROM videogames
+        WHERE hltb_single IS NOT NULL
+        LIMIT 100
     """
-    df_age_spending = spark.sql(query)
-    df_age_spending.show()
-    # Geberación de JSON
-    results = df_age_spending.toJSON().collect()
-    with open("results/avg_spending_by_age.json", "w") as file:
+    df_avg_playtime = spark.sql(query)
+    df_avg_playtime.show()
+    results = df_avg_playtime.toJSON().collect()
+    with open("results/avg_playtime.json", "w") as file:
         json.dump(results, file)
 
-    # Categorías más compradas
+    # Top 10 juegos con la más opiniones poisitivas que negativas en relación
     query = """
-        SELECT Purchase_Category, COUNT(*) AS Purchase_Count
-        FROM customers
-        GROUP BY Purchase_Category
-        ORDER BY Purchase_Count DESC
+        SELECT name, positive, negative,
+               (positive * 1.0 / (positive + negative)) AS review_ratio
+        FROM videogames
+        WHERE (positive + negative) > 0
+        ORDER BY review_ratio DESC
+        LIMIT 10
     """
-    df_top_categories = spark.sql(query)
-    df_top_categories.show()
-    # Geberación de JSON
-    results = df_top_categories.toJSON().collect()
-    with open("results/top_categories.json", "w") as file:
+    df_best_reviews = spark.sql(query)
+    df_best_reviews.show()
+    results = df_best_reviews.toJSON().collect()
+    with open("results/top_reviewed_games.json", "w") as file:
         json.dump(results, file)
 
     spark.stop()
