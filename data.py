@@ -6,7 +6,7 @@ if __name__ == "__main__":
 
     path_videogames = "dataset.csv"
     df_videogames = spark.read.csv(path_videogames, header=True, inferSchema=True)
-
+    df_videogames.write.mode("overwrite").json("results")
     df_videogames.createOrReplaceTempView("videogames")
 
     # Top 10 juegos más caros
