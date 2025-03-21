@@ -2,9 +2,9 @@ name: spark
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ "master" ]
+    branches: [ "main" ]
   repository_dispatch:
     types: [spark]
 
@@ -15,42 +15,34 @@ jobs:
       contents: write
 
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v4  # Checkout repository
 
-    - name: List Files (Debugging)
-      run: ls -la  
+    - run: ls -la  # List files to confirm dataset.csv is present
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
+    - uses: actions/setup-python@v5
       with:
         python-version: '3.10'
 
-    - name: Set up Java
-      uses: actions/setup-java@v4
+    - uses: actions/setup-java@v4
       with:
         java-version: '21'
         distribution: temurin
 
-    - name: Set up Apache Spark
-      uses: vemonet/setup-spark@v1
+    - uses: vemonet/setup-spark@v1
       with:
         spark-version: '3.5.3'
         hadoop-version: '3'
 
-    - name: Download Dataset
-      run: wget -O Ecommerce_Consumer_Behavior_Analysis_Data.csv https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/datasets/Ecommerce_Consumer_Behavior_Analysis_Data.csv
+    - run: mkdir -p results  # Ensure results directory exists
 
-    - name: Verify Dataset
-      run: ls -la && head -n 5 Ecommerce_Consumer_Behavior_Analysis_Data.csv
+    - run: spark-submit --master local data.py  # Run your Spark job
+    
+    - run: ls -la results  # Check output
 
-    - name: Run Spark Job
-      run: spark-submit --master local people.py 
-
-    - name: Commit and Push Spark Results
+    - name: GIT commit and push results
       env: 
-        CI_COMMIT_MESSAGE: save spark results
-        CI_COMMIT_AUTHOR: adsoft 
+        CI_COMMIT_MESSAGE: "Save Spark results"
+        CI_COMMIT_AUTHOR: "adsoft"
       run: |
         git config --global user.name "${{ env.CI_COMMIT_AUTHOR }}"
         git config --global user.email "adsoft@live.com.mx"
