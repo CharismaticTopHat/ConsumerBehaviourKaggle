@@ -12,7 +12,12 @@ if __name__ == "__main__":
 
     # Mostrar estructura de los datos
     query = "DESCRIBE customers"
-    spark.sql(query).show(20)
+    df_describe = spark.sql(query)
+    df_describe.show()
+    # Geberación de JSON
+    results = df_describe.toJSON().collect()
+    with open("results/describe_customers.json", "w") as file:
+        json.dump(results, file)
 
     # Top 10 clientes que más gastaron
     query = """
@@ -24,6 +29,10 @@ if __name__ == "__main__":
     """
     df_top_customers = spark.sql(query)
     df_top_customers.show()
+    # Geberación de JSON
+    results = df_top_customers.toJSON().collect()
+    with open("results/top_customers.json", "w") as file:
+        json.dump(results, file)
 
     # Cantidad promedio de compras en base a edad
     query = """
@@ -34,6 +43,10 @@ if __name__ == "__main__":
     """
     df_age_spending = spark.sql(query)
     df_age_spending.show()
+    # Geberación de JSON
+    results = df_age_spending.toJSON().collect()
+    with open("results/avg_spending_by_age.json", "w") as file:
+        json.dump(results, file)
 
     # Categorías más compradas
     query = """
@@ -44,7 +57,7 @@ if __name__ == "__main__":
     """
     df_top_categories = spark.sql(query)
     df_top_categories.show()
-
+    # Geberación de JSON
     results = df_top_categories.toJSON().collect()
     with open("results/top_categories.json", "w") as file:
         json.dump(results, file)
